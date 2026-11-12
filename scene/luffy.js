@@ -61,14 +61,16 @@ const HANDS = [
         fingers: [['Hand01_L11', 'Hand01_L12', 'Hand01_L13'], ['Hand01_L02', 'Hand01_L03', 'Hand01_L04'],
                   ['Hand01_L05', 'Hand01_L06', 'Hand01_L07'], ['Hand01_L08', 'Hand01_L09', 'Hand01_L10']],
         thumb: ['Hand01_L14', 'Hand01_L15', 'Hand01_L16'],
-        wrist: 'Hand01_L01'
+        wrist: 'Hand01_L01',
+        bone: 'Bip001 L Hand'
     },
     {
         side: -1,
         fingers: [['Hand01_R15', 'Hand01_R16', 'Hand01_R17'], ['Hand01_R03', 'Hand01_R04', 'Hand01_R05'],
                   ['Hand01_R06', 'Hand01_R07', 'Hand01_R08'], ['Hand01_R09', 'Hand01_R10', 'Hand01_R11']],
         thumb: ['Hand01_R12', 'Hand01_R13', 'Hand01_R14'],
-        wrist: 'Hand01_R02'
+        wrist: 'Hand01_R02',
+        bone: 'Bip001 R Hand'
     }
 ]
 const FINGER_CURL = [1.4, 1.5, 1.2]     // ângulo de cada falange (base, meio, ponta)
@@ -107,6 +109,40 @@ function fistBones(bones) {
     }
     return result
 }
+
+// cotovelo: dobra o antebraço para a frente em torno do eixo da própria articulação.
+// d é a direção do antebraço no bind; o eixo d x (0, 0, 1) é perpendicular a ela, e
+// um ângulo positivo leva o antebraço para +z (para a frente). Girar em torno de um
+// eixo do mundo (y, por exemplo) misturaria a dobra com uma torção do antebraço
+function elbowBend(position, side, angle) {
+    const d = v3.normalize(v3.subtract(position[`Bip001 ${side} Hand`], position[`Bip001 ${side} Forearm`]))
+    return { matrix: m4.axisRotation(v3.normalize(v3.cross(d, [0, 0, 1])), angle) }
+}
+
+// mão aberta em palma de kung fu: dedos quase retos, polegar junto da mão e o pulso
+// dobrado para as costas da mão (sinal contrário ao do punho), com a palma para a frente
+const PALM = { wrist: 1.2, curl: 0.1, thumb: 0.3 }
+
+function palmBones(position, hand, scale) {
+    const knuckles = v3.normalize(v3.subtract(position[hand.fingers[0][0]], position[hand.fingers[3][0]]))
+    const along = v3.normalize(v3.subtract(position[hand.fingers[1][0]], position[hand.wrist]))
+    const result = {
+        [hand.bone]: { matrix: m4.axisRotation(knuckles, PALM.wrist * hand.side), scale: [scale, scale, scale] }
+    }
+    for (const finger of hand.fingers) {
+        finger.forEach((name, k) => {
+            result[name] = { matrix: m4.axisRotation(knuckles, -(k === 0 ? PALM.curl : PALM.curl / 2) * hand.side) }
+        })
+    }
+    const [base, middle, tip] = hand.thumb
+    result[base] = { matrix: m4.axisRotation(along, PALM.thumb * hand.side) }
+    result[middle] = { matrix: m4.identity() }
+    result[tip] = { matrix: m4.identity() }
+    return result
+}
+
+// punhos gigantes da pose 2 (escala da mão; os dedos, filhos dela, crescem junto)
+const BIG_HANDS = 1.8
 
 // respiração: um ciclo a cada BREATH_PERIOD segundos. breath vai de 0 (ar solto) a
 // 1 (peito cheio) com (1 - cos) / 2, que começa e termina devagar. Ao puxar o ar o
@@ -151,21 +187,36 @@ export const POSES = [
     },
     {
         name: 'ataque básico',
-        // virado para a esquerda da câmera inicial
-        root: { translation: [0.6, 0, 0.4], rotation: [0, -Math.PI / 2, 0] },
+        // Gear 4 quicando no ar, de frente para a câmera. O braço direito vem para a
+        // frente com a mão aberta em palma; o esquerdo fica recuado, armando o soco
+        root: { translation: [0, 0.5, 0], rotation: [0, 0, 0] },
         gunArms: false,
+        fists: true,
+        // ossos que dependem das posições do bind (calculados no createLuffy)
+        build: position => ({
+            // pouca dobra: o antebraço direito fica alinhado com o resto do braço
+            'Bip001 R Forearm': elbowBend(position, 'R', 0.5),
+            'Bip001 L Forearm': elbowBend(position, 'L', 2.2),
+            ...palmBones(position, HANDS[1], BIG_HANDS)
+        }),
         bones: {
-            'Bip001 Spine1': [0, -0.35, 0],
-            // braço direito esticado para frente (horizontal e girado para +z)
-            'Bip001 R UpperArm': [0, Math.PI / 2, -0.7],
-            'Bip001 R Forearm': [0, 0, 0.1],
-            // braço esquerdo puxado para trás, com o cotovelo dobrado
-            'Bip001 L UpperArm': [0, 0.8, 0.5],
-            'Bip001 L Forearm': [0, -1.2, 0],
-            'Bip001 L Thigh': [-0.5, 0, 0.1],
-            'Bip001 L Calf': [0.5, 0, 0],
-            'Bip001 R Thigh': [0.3, 0, -0.1],
-            'Bip001 R Calf': [0.4, 0, 0]
+            ...ANGRY_FACE,
+            'facebone_01': [0.3, 0, 0],     // boca mais aberta que na pose 1 (grito)
+            // tronco torcido para a esquerda da tela e cabeça inclinada para a frente
+            'Bip001 Spine1': [0.1, -0.2, 0],
+            'Bip001 Head': [0.15, 0.1, 0],
+            // braço direito para o lado e para a frente; esquerdo erguido e para trás
+            'Bip001 R UpperArm': [0, 0.9, -0.4],
+            'Bip001 L UpperArm': [0, 0.6, 1.4],
+            'Bip001 L Hand': { scale: [BIG_HANDS, BIG_HANDS, BIG_HANDS] },
+            // pernas encolhidas como molas: joelhos para a frente e para fora,
+            // canelas dobradas para trás e pés esticados para baixo
+            'Bip001 R Thigh': [-1.0, 0, -0.7],
+            'Bip001 R Calf': [2.0, 0, 0],
+            'Bip001 R Foot': [0.8, 0, 0.3],
+            'Bip001 L Thigh': [-0.8, 0, 0.6],
+            'Bip001 L Calf': [1.8, 0, 0],
+            'Bip001 L Foot': [0.9, 0, -0.2]
         }
     },
     {
@@ -209,6 +260,10 @@ export async function createLuffy(gl) {
         }))
 
     const fists = fistBones(bones)
+    const position = Object.fromEntries(bones.map(bone => [bone.name, bone.position]))
+    for (const pose of POSES) {
+        if (pose.build) pose.bones = { ...pose.bones, ...pose.build(position) }
+    }
     for (const pose of POSES) {
         if (!pose.file) continue
         const fileBones = await loadPose(POSE_FOLDER + pose.file)
