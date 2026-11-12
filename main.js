@@ -8,6 +8,7 @@ import { createRocks } from './scene/rock.js'
 import { createRuin } from './scene/ruin.js'
 import { createSunflower } from './scene/sunflower.js'
 import { createPinwheel } from './scene/pinwheel.js'
+import { createLuffy } from './scene/luffy.js'
 import { createSkydome, HORIZON_COLOR } from './scene/skydome.js'
 import { createBirdcage } from './scene/birdcage.js'
 
@@ -18,10 +19,15 @@ const UNIFORMS = [
     'u_ambient', 'u_diffuse', 'u_specular', 'u_shininess',
     'u_fogEnabled', 'u_fogColor', 'u_fogDensity'
 ]
+// o programa do Luffy usa os mesmos uniformes, mais as matrizes dos ossos
+const SKIN_UNIFORMS = [...UNIFORMS, 'u_bones']
 
 const state = {
     program: null,
     locations: {},
+    skinProgram: null,
+    skinLocations: {},
+    luffy: null,
     projectionMatrix: m4.identity(),
     whiteTexture: null,
     // luz do fim de tarde: vem de cima e um pouco de lado, tom quente
@@ -61,6 +67,7 @@ function setupKeyboard() {
         if (e.code === 'Digit2') selectCamera(2)
         if (e.code === 'KeyL') state.light.enabled = !state.light.enabled
         if (e.code === 'KeyN') state.fog.enabled = !state.fog.enabled
+        if (e.code === 'KeyP') state.luffy.nextPose()
     })
 }
 
@@ -68,6 +75,9 @@ async function initialize(gl) {
     state.program = await createProgramFromFiles(gl, 'shaders/phong.vertex.glsl', 'shaders/phong.fragment.glsl')
     state.locations = getUniformLocations(gl, state.program, UNIFORMS)
     state.whiteTexture = createColorTexture(gl)
+    state.skinProgram = await createProgramFromFiles(gl, 'shaders/skin.vertex.glsl', 'shaders/phong.fragment.glsl')
+    state.skinLocations = getUniformLocations(gl, state.skinProgram, SKIN_UNIFORMS)
+    state.luffy = await createLuffy(gl)
 
     state.scene = createNode({
         children: await Promise.all([
@@ -111,18 +121,9 @@ function drawNode(gl, node, parentMatrix) {
     }
 }
 
-function render(gl) {
-    const { locations, light, fog } = state
-
-    // abaixo do horizonte do skydome aparece a cor de fundo: a do horizonte do céu,
-    // ou a da neblina quando ela está ligada (como no glFog visto em aula)
-    gl.clearColor(...(fog.enabled ? fog.color : HORIZON_COLOR), 1)
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
-    const view = { camera, projectionMatrix: state.projectionMatrix, fog, time: state.time }
-    state.sky.draw(gl, view)
-
-    gl.useProgram(state.program)
+// uniformes de câmera, luz e neblina: iguais para o programa Phong e o de skinning
+function setSceneUniforms(gl, locations) {
+    const { light, fog } = state
     gl.uniformMatrix4fv(locations.u_view, false, camera.viewMatrix)
     gl.uniformMatrix4fv(locations.u_projection, false, state.projectionMatrix)
     gl.uniform3fv(locations.u_cameraPosition, camera.position)
@@ -133,10 +134,28 @@ function render(gl) {
     gl.uniform3fv(locations.u_fogColor, fog.color)
     gl.uniform1f(locations.u_fogDensity, fog.density)
     gl.uniform1i(locations.u_texture, 0)
+}
 
+function render(gl) {
+    const { fog } = state
+
+    // abaixo do horizonte do skydome aparece a cor de fundo: a do horizonte do céu,
+    // ou a da neblina quando ela está ligada (como no glFog visto em aula)
+    gl.clearColor(...(fog.enabled ? fog.color : HORIZON_COLOR), 1)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+    const view = { camera, projectionMatrix: state.projectionMatrix, fog, time: state.time }
+    state.sky.draw(gl, view)
+
+    gl.useProgram(state.program)
+    setSceneUniforms(gl, state.locations)
     gl.activeTexture(gl.TEXTURE0)
 
     drawNode(gl, state.scene, m4.identity())
+
+    gl.useProgram(state.skinProgram)
+    setSceneUniforms(gl, state.skinLocations)
+    state.luffy.draw(gl, state.skinLocations)
 
     // transparentes por último
     state.cage.draw(gl, view)
@@ -156,6 +175,7 @@ function frame(now) {
     resize(gl)
     updateCamera(dt)
     updateNode(state.scene, dt)
+    state.luffy.update(state.time)
     render(gl)
     requestAnimationFrame(frame)
 }

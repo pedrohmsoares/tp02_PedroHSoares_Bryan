@@ -2,7 +2,9 @@
 export const ATTRIBUTES = {
     a_coords: 0,
     a_normal: 1,
-    a_texcoord: 2
+    a_texcoord: 2,
+    a_boneIndices: 3,
+    a_boneWeights: 4
 }
 
 function createAttribute(gl, location, data, size) {
@@ -14,14 +16,19 @@ function createAttribute(gl, location, data, size) {
 }
 
 // recebe o resultado de primitives.createXxxVertices() da TWGL
-// ({ position, normal, texcoord, indices }) e cria VAO, VBOs e IBO
-export function createMesh(gl, vertices) {
+// ({ position, normal, texcoord, indices }) e cria VAO, VBOs e IBO.
+// extraAttributes: atributos a mais, como os ossos do skinning
+// ([{ location, data, size }])
+export function createMesh(gl, vertices, extraAttributes = []) {
     const vao = gl.createVertexArray()
     gl.bindVertexArray(vao)
 
     createAttribute(gl, ATTRIBUTES.a_coords, vertices.position, 3)
     createAttribute(gl, ATTRIBUTES.a_normal, vertices.normal, 3)
     createAttribute(gl, ATTRIBUTES.a_texcoord, vertices.texcoord, 2)
+    for (const { location, data, size } of extraAttributes) {
+        createAttribute(gl, location, data, size)
+    }
 
     const ibo = gl.createBuffer()
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)

@@ -28,3 +28,26 @@ export function loadTexture(gl, url) {
         image.src = url
     })
 }
+
+// textura procedural (aula de texturas): a cor de cada texel vem de uma função
+// colorAt(s, t) -> [r, g, b], com s e t de 0 a 1. Depois é enviada como array,
+// do mesmo jeito que o exemplo dos slides (texImage2D com arrayCores)
+export function createProceduralTexture(gl, size, colorAt) {
+    const data = new Uint8Array(size * size * 4)
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            const [r, g, b] = colorAt(x / size, y / size)
+            data.set([r, g, b, 255], (y * size + x) * 4)
+        }
+    }
+
+    const texture = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, data)
+    gl.generateMipmap(gl.TEXTURE_2D)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+    return texture
+}
