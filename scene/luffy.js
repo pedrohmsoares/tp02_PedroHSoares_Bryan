@@ -113,21 +113,34 @@ function fistBones(bones) {
 // cotovelo: dobra o antebraço para a frente em torno do eixo da própria articulação.
 // d é a direção do antebraço no bind; o eixo d x (0, 0, 1) é perpendicular a ela, e
 // um ângulo positivo leva o antebraço para +z (para a frente). Girar em torno de um
-// eixo do mundo (y, por exemplo) misturaria a dobra com uma torção do antebraço
-function elbowBend(position, side, angle) {
+// eixo do mundo (y, por exemplo) misturaria a dobra com uma torção do antebraço.
+// twist gira o antebraço já dobrado em torno do eixo do braço (ombro -> cotovelo),
+// levando o punho para fora ou para dentro do corpo
+function elbowBend(position, side, angle, twist = 0) {
     const d = v3.normalize(v3.subtract(position[`Bip001 ${side} Hand`], position[`Bip001 ${side} Forearm`]))
-    return { matrix: m4.axisRotation(v3.normalize(v3.cross(d, [0, 0, 1])), angle) }
+    const upperArm = v3.normalize(v3.subtract(position[`Bip001 ${side} Forearm`], position[`Bip001 ${side} UpperArm`]))
+    const bend = m4.axisRotation(v3.normalize(v3.cross(d, [0, 0, 1])), angle)
+    return { matrix: m4.multiply(m4.axisRotation(upperArm, twist), bend) }
+}
+
+// giro da mão em torno do eixo do antebraço (cotovelo -> pulso)
+function forearmAxis(position, side) {
+    return v3.normalize(v3.subtract(position[`Bip001 ${side} Hand`], position[`Bip001 ${side} Forearm`]))
 }
 
 // mão aberta em palma de kung fu: dedos quase retos, polegar junto da mão e o pulso
-// dobrado para as costas da mão (sinal contrário ao do punho), com a palma para a frente
-const PALM = { wrist: 1.2, curl: 0.1, thumb: 0.3 }
+// dobrado para as costas da mão (sinal contrário ao do punho) a ~86°. Depois a mão
+// gira ~86° em torno do antebraço, e os dedos ficam na horizontal, apontando para
+// o centro do corpo, com a palma para a frente
+const PALM = { wrist: 1.5, twist: 1.5, curl: 0.1, thumb: 0.3 }
 
-function palmBones(position, hand, scale) {
+function palmBones(position, hand) {
     const knuckles = v3.normalize(v3.subtract(position[hand.fingers[0][0]], position[hand.fingers[3][0]]))
     const along = v3.normalize(v3.subtract(position[hand.fingers[1][0]], position[hand.wrist]))
+    const forearm = forearmAxis(position, hand.side > 0 ? 'L' : 'R')
+    const bend = m4.axisRotation(knuckles, PALM.wrist * hand.side)
     const result = {
-        [hand.bone]: { matrix: m4.axisRotation(knuckles, PALM.wrist * hand.side), scale: [scale, scale, scale] }
+        [hand.bone]: { matrix: m4.multiply(m4.axisRotation(forearm, PALM.twist * hand.side), bend) }
     }
     for (const finger of hand.fingers) {
         finger.forEach((name, k) => {
@@ -140,9 +153,6 @@ function palmBones(position, hand, scale) {
     result[tip] = { matrix: m4.identity() }
     return result
 }
-
-// punhos gigantes da pose 2 (escala da mão; os dedos, filhos dela, crescem junto)
-const BIG_HANDS = 1.8
 
 // respiração: um ciclo a cada BREATH_PERIOD segundos. breath vai de 0 (ar solto) a
 // 1 (peito cheio) com (1 - cos) / 2, que começa e termina devagar. Ao puxar o ar o
@@ -161,6 +171,48 @@ function breathingBones(time) {
         'Bip001 Neck': [-chest, 0, 0],
         'Bip001 L Clavicle': [0, 0, shoulders],
         'Bip001 R Clavicle': [0, 0, -shoulders]
+    }
+}
+
+// quique do Gear 4, copiado do vídeo de referência (altura do topo da cabeça medida
+// quadro a quadro): a cada 1,5 s ele fica parado no alto, desce acelerando em 0,25 s,
+// volta num tranco em 0,05 s até 1/4 da descida e se acomoda em mais 0,25 s.
+// Quadros-chave [tempo (s), profundidade de 0 a 1], interpolados com o tempo
+const BOUNCE = { period: 1.5, drop: 0.35, armDelay: 0.05 }
+const BOUNCE_KEYS = [[0, 0], [0.25, 1], [0.3, 0.25], [0.55, 0], [1.5, 0]]
+
+function bounceDepth(time) {
+    const t = ((time % BOUNCE.period) + BOUNCE.period) % BOUNCE.period
+    for (let k = 1; k < BOUNCE_KEYS.length; k++) {
+        const [t0, d0] = BOUNCE_KEYS[k - 1]
+        const [t1, d1] = BOUNCE_KEYS[k]
+        if (t > t1) continue
+        let s = (t - t0) / (t1 - t0)
+        // a descida acelera como uma queda (s²); os outros trechos suavizam (smoothstep)
+        s = k === 1 ? s * s : s * s * (3 - 2 * s)
+        return d0 + (d1 - d0) * s
+    }
+    return 0
+}
+
+// na descida o corpo baixa, as pernas encolhem mais (molas comprimidas) e o tronco
+// inclina para a frente; os braços vão junto com um pequeno atraso (inércia dos punhos)
+function bouncingBones(pose, time) {
+    const depth = bounceDepth(time)
+    const arms = bounceDepth(time - BOUNCE.armDelay)
+    const add = (name, delta) => pose.bones[name].map((value, k) => value + delta[k])
+    const [x, y, z] = pose.root.translation
+    return {
+        root: { ...pose.root, translation: [x, y - BOUNCE.drop * depth, z] },
+        bones: {
+            'Bip001 Spine1': add('Bip001 Spine1', [0.15 * depth, 0, 0]),
+            'Bip001 R Thigh': add('Bip001 R Thigh', [-0.4 * depth, 0, 0]),
+            'Bip001 L Thigh': add('Bip001 L Thigh', [-0.4 * depth, 0, 0]),
+            'Bip001 R Calf': add('Bip001 R Calf', [0.6 * depth, 0, 0]),
+            'Bip001 L Calf': add('Bip001 L Calf', [0.6 * depth, 0, 0]),
+            'Bip001 R UpperArm': add('Bip001 R UpperArm', [0, 0, 0.15 * arms]),
+            'Bip001 L UpperArm': add('Bip001 L UpperArm', [0, 0, -0.15 * arms])
+        }
     }
 }
 
@@ -192,23 +244,29 @@ export const POSES = [
         root: { translation: [0, 0.5, 0], rotation: [0, 0, 0] },
         gunArms: false,
         fists: true,
+        bouncing: true,
         // ossos que dependem das posições do bind (calculados no createLuffy)
         build: position => ({
-            // pouca dobra: o antebraço direito fica alinhado com o resto do braço
-            'Bip001 R Forearm': elbowBend(position, 'R', 0.5),
-            'Bip001 L Forearm': elbowBend(position, 'L', 2.2),
-            ...palmBones(position, HANDS[1], BIG_HANDS)
+            // sem dobra: o antebraço direito segue reto a linha do braço
+            'Bip001 R Forearm': elbowBend(position, 'R', 0),
+            // cotovelo bem dobrado, com o punho colado ao corpo perto do ombro,
+            // e a mão girada no antebraço para a palma (dedos dobrados) ficar para fora
+            'Bip001 L Forearm': elbowBend(position, 'L', 2.6, 0.4),
+            'Bip001 L Hand': { matrix: m4.axisRotation(forearmAxis(position, 'L'), 1.6) },
+            ...palmBones(position, HANDS[1])
         }),
         bones: {
             ...ANGRY_FACE,
             'facebone_01': [0.3, 0, 0],     // boca mais aberta que na pose 1 (grito)
             // tronco torcido para a esquerda da tela e cabeça inclinada para a frente
             'Bip001 Spine1': [0.1, -0.2, 0],
-            'Bip001 Head': [0.15, 0.1, 0],
+            // cabeça olhando ao longo do braço da palma: o braço aponta ~50° para a
+            // direita dele; o tronco já gira 0,2, a cabeça gira o resto. Quase sem
+            // inclinar para baixo, para o queixo não encostar no peito
+            'Bip001 Head': [0.05, -0.67, 0],
             // braço direito para o lado e para a frente; esquerdo erguido e para trás
             'Bip001 R UpperArm': [0, 0.9, -0.4],
             'Bip001 L UpperArm': [0, 0.6, 1.4],
-            'Bip001 L Hand': { scale: [BIG_HANDS, BIG_HANDS, BIG_HANDS] },
             // pernas encolhidas como molas: joelhos para a frente e para fora,
             // canelas dobradas para trás e pés esticados para baixo
             'Bip001 R Thigh': [-1.0, 0, -0.7],
@@ -313,10 +371,14 @@ export async function createLuffy(gl) {
             applyPose(POSES[poseIndex])
         },
 
-        // respiração: só nas poses com breathing, recalcula a pose a cada quadro
+        // poses animadas (respiração e quique): recalcula a pose a cada quadro
         update(time) {
             const pose = POSES[poseIndex]
             if (pose.breathing) applyPose(pose, breathingBones(time))
+            if (pose.bouncing) {
+                const { root, bones } = bouncingBones(pose, time)
+                applyPose({ ...pose, root }, bones)
+            }
         },
 
         // usa o programa de skinning, com os uniformes de luz/câmera já definidos
