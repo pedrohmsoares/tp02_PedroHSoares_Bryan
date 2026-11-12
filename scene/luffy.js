@@ -181,6 +181,16 @@ function breathingBones(time) {
 const BOUNCE = { period: 1.5, drop: 0.35, armDelay: 0.05 }
 const BOUNCE_KEYS = [[0, 0], [0.25, 1], [0.3, 0.25], [0.55, 0], [1.5, 0]]
 
+// som do quique (só na pose 2). As batidas do arquivo começam em 1,40 s, 2,90 s e
+// 4,40 s, também a cada 1,5 s. Usamos o trecho de 1,0 s a 4,0 s (dois ciclos inteiros)
+// e alinhamos a batida de 1,40 s com o instante 0,22 s do ciclo, logo antes do fundo
+// da descida, para o pico do som (~0,1 s depois) cair no tranco de volta.
+// lead = 0,4 - 0,22: quanto o áudio está adiantado em relação ao começo do ciclo
+const BOUNCE_SOUND = {
+    file: 'assets/sounds/luffyBouncing.mp3',
+    start: 1.0, length: 2 * BOUNCE.period, lead: 0.4 - 0.22, tolerance: 0.08
+}
+
 function bounceDepth(time) {
     const t = ((time % BOUNCE.period) + BOUNCE.period) % BOUNCE.period
     for (let k = 1; k < BOUNCE_KEYS.length; k++) {
@@ -365,10 +375,28 @@ export async function createLuffy(gl) {
 
     applyPose(POSES[0])
 
+    const bounceSound = new Audio(BOUNCE_SOUND.file)
+
+    // o som acompanha o tempo da animação: o instante certo do áudio é calculado a
+    // partir do tempo e, se o som estiver adiantado ou atrasado (ou passou do fim do
+    // trecho), ele é reposicionado. Assim o trecho de 3 s se repete sem perder o ritmo
+    function syncBounceSound(time) {
+        if (bounceSound.paused) return
+        const { start, length, lead } = BOUNCE_SOUND
+        const expected = start + ((((time + lead) % length) + length) % length)
+        if (Math.abs(bounceSound.currentTime - expected) > BOUNCE_SOUND.tolerance) {
+            bounceSound.currentTime = expected
+        }
+    }
+
     return {
         nextPose() {
             poseIndex = (poseIndex + 1) % POSES.length
             applyPose(POSES[poseIndex])
+            // o navegador só deixa tocar som depois de uma ação do usuário; a troca de
+            // pose vem da tecla P, então o play() é chamado aqui
+            if (POSES[poseIndex].bouncing) bounceSound.play().catch(() => {})
+            else bounceSound.pause()
         },
 
         // poses animadas (respiração e quique): recalcula a pose a cada quadro
@@ -378,6 +406,7 @@ export async function createLuffy(gl) {
             if (pose.bouncing) {
                 const { root, bones } = bouncingBones(pose, time)
                 applyPose({ ...pose, root }, bones)
+                syncBounceSound(time)
             }
         },
 
