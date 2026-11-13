@@ -26,6 +26,7 @@ Depois abra <http://localhost:8000> em um navegador com suporte a WebGL2. É pre
 | N | Liga ou desliga a neblina |
 | G | Mostra ou oculta a gaiola |
 | L | Liga ou desliga a iluminação |
+| M | Toca ou pausa a música de fundo (também pelo botão no painel) |
 | 1 | Volta para a câmera automática |
 | 2 | Alterna entre câmera orbital e automática |
 | 3 | Entra na câmera livre |
@@ -34,6 +35,8 @@ Depois abra <http://localhost:8000> em um navegador com suporte a WebGL2. É pre
 | W / A / S / D | Move a câmera livre para frente, esquerda, trás e direita |
 | Q / E | Desce ou sobe na câmera livre |
 | Shift | Acelera o movimento da câmera livre |
+
+No painel dá para ajustar o volume da música. A faixa de fundo é **Five Armies**, de Kevin MacLeod, uma instrumental de batalha; a música começa quando apertamos o botão ou M.
 
 ## Criadores
 
@@ -76,6 +79,7 @@ Os trechos abaixo são os itens do enunciado que implementamos:
 - Fotos das figures usadas como referência: [pose neutra, via Mercado Livre](https://www.mercadolivre.com.br/one-piece-luffy-gear-4-boundman-megahouse-bandai/up/MLBU3889418805) e [ataque básico, via Geek Fanáticos](https://www.geekfanaticos.com.br/produto/luffy-gear-4-the-bound-man-king-of-artist-one-piece-banpresto-75587). A origem da foto do King Kong Gun ainda precisa ser identificada; recebemos a miniatura pelo Google Imagens.
 - Modelo do Luffy Gear 4: *One Piece Fighting Path*, disponibilizado por **o_dv89_o**, conforme a identificação do modelo. Falta adicionar o link da página de origem.
 - [TWGL.js](https://twgljs.org/): usada para as matrizes, vetores e primitivas geométricas.
+- Música de fundo: **Five Armies**, Kevin MacLeod ([incompetech.com](https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100875)). Licenciada sob [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/). Arquivo original, sem edição. Atribuição também em [assets/sounds/CREDITS.md](assets/sounds/CREDITS.md).
 - Código das aulas de Computação Gráfica: referência para os shaders e utilitários WebGL.
 - Texturas do chão, pedras e ruínas: links de origem a adicionar.
 - Efeito sonoro `luffyBouncing.mp3`: fonte a adicionar.

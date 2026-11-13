@@ -22,6 +22,18 @@
     </dl>
     <p id="camera-help">Arraste na câmera orbital · Scroll para aproximar</p>
     <p class="free-help" id="free-help" hidden><kbd>W A S D</kbd> mover · <kbd>Q / E</kbd> descer / subir<br><kbd>Shift</kbd> acelerar · Arraste para olhar</p>
+    <section class="music-controls" aria-label="Música de fundo">
+      <div class="music-heading">
+        <button id="music-toggle" type="button" aria-pressed="false">Tocar música</button>
+        <span><kbd>M</kbd></span>
+      </div>
+      <p id="music-status" role="status">Five Armies · Kevin MacLeod</p>
+      <div class="music-volume">
+        <label for="music-volume">Volume</label>
+        <input id="music-volume" type="range" min="0" max="100" step="1" value="25">
+        <output id="music-volume-value" for="music-volume">25%</output>
+      </div>
+    </section>
   </aside>
   <script type="module" src="main.js"></script>
 </body>

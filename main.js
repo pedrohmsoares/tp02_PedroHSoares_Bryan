@@ -13,6 +13,7 @@ import { createSkydome, HORIZON_COLOR } from './scene/skydome.js'
 import { createBirdcage } from './scene/birdcage.js'
 import { createDebris } from './scene/debris.js'
 import { createParticles } from './scene/particles.js'
+import { setupMusicControls } from './utils/music.js'
 
 const UNIFORMS = [
     'u_model', 'u_view', 'u_projection',
@@ -52,6 +53,7 @@ const state = {
     cage: null,
     cageVisible: true,
     particles: null,
+    music: null,
     time: 0
 }
 
@@ -84,6 +86,7 @@ function setupKeyboard() {
         if (e.code === 'KeyN') state.fog.enabled = !state.fog.enabled
         if (e.code === 'KeyG') state.cageVisible = !state.cageVisible
         if (e.code === 'KeyP') state.luffy.nextPose()
+        if (e.code === 'KeyM') state.music.toggle()
         updateControls()
     })
 }
@@ -115,6 +118,7 @@ async function initialize(gl) {
     gl.enable(gl.CULL_FACE)
 
     setupCameraControls(gl.canvas)
+    state.music = setupMusicControls()
     setupKeyboard()
     updateControls()
 }
