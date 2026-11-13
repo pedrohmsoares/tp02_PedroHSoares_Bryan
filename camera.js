@@ -1,14 +1,14 @@
 import { m4 } from './twgl.full.module.js'
 
-// câmera 1: a 45° do chão, girando sozinha em volta do centro
+// câmera 1: ângulo baixo para enquadrar o personagem e o céu, girando sozinha
 // câmera 2: orbital, o usuário gira arrastando o mouse
 // câmera 3: livre, com WASD, Q/E e mouse para olhar
 const cameras = {
     active: 1,
-    target: [0, 0, 0],
+    target: [0, 0.8, 0],
     minDistance: 4,
     maxDistance: 30,
-    1: { azimuth: 0, elevation: Math.PI / 4, distance: 14, speed: 0.2 },
+    1: { azimuth: 0, elevation: 0.28, distance: 14, speed: 0.2 },
     2: { azimuth: Math.PI / 6, elevation: 0.4, distance: 14 },
     3: { position: [0, 8, 12], yaw: 0, pitch: -0.5, speed: 4 }
 }
@@ -32,6 +32,7 @@ export function selectCamera(number) {
     cameras.active = number
     camera.mode = number
 }
+
 
 function orbit(deltaAzimuth, deltaElevation) {
     const cam = cameras[2]

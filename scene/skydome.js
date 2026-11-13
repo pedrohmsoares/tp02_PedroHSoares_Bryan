@@ -5,8 +5,8 @@ import { createProgramFromFiles, getUniformLocations } from '../utils/shader.js'
 const SKY_RADIUS = 50
 
 // azul claro no horizonte e mais forte no alto, como o céu fora da gaiola
-export const HORIZON_COLOR = [0.76, 0.86, 0.96]
-const ZENITH_COLOR = [0.08, 0.35, 0.69]
+export const HORIZON_COLOR = [0.79, 0.86, 0.94]
+const ZENITH_COLOR = [0.07, 0.32, 0.66]
 
 const UNIFORMS = [
     'u_view', 'u_projection', 'u_cameraPosition', 'u_time',
