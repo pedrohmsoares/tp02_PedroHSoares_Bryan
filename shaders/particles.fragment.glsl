@@ -3,7 +3,7 @@ precision highp float;
 
 in vec3 v_worldPos;
 in float v_alpha;
-in float v_steam;
+in float v_kind;
 out vec4 o_color;
 
 uniform vec3 u_cameraPosition;
@@ -30,7 +30,8 @@ void main() {
     float edge = 1.0 - smoothstep(0.2, 1.0, radius);
     float alpha = edge * edge * v_alpha;
     if (alpha < 0.005) discard;
-    vec3 color = mix(vec3(1.0, 0.82, 0.53), vec3(0.94, 0.97, 1.0), v_steam);
+    vec3 color = v_kind > 1.5 ? vec3(0.76, 0.59, 0.41)
+        : v_kind > 0.5 ? vec3(0.94, 0.97, 1.0) : vec3(1.0, 0.82, 0.53);
     if (u_fogEnabled) color = mix(color, u_fogColor, fogOpacity(v_worldPos));
     o_color = vec4(color, alpha);
 }

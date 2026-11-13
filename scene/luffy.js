@@ -178,7 +178,7 @@ function breathingBones(time) {
 // quadro a quadro): a cada 1,5 s ele fica parado no alto, desce acelerando em 0,25 s,
 // volta num tranco em 0,05 s até 1/4 da descida e se acomoda em mais 0,25 s.
 // Quadros-chave [tempo (s), profundidade de 0 a 1], interpolados com o tempo
-const BOUNCE = { period: 1.5, drop: 0.35, armDelay: 0.05 }
+const BOUNCE = { period: 1.5, drop: 0.35, armDelay: 0.05, impact: 0.25 }
 const BOUNCE_KEYS = [[0, 0], [0.25, 1], [0.3, 0.25], [0.55, 0], [1.5, 0]]
 
 // som do quique (só na pose 2). As batidas do arquivo começam em 1,40 s, 2,90 s e
@@ -376,6 +376,7 @@ export async function createLuffy(gl) {
     applyPose(POSES[0])
 
     const bounceSound = new Audio(BOUNCE_SOUND.file)
+    let lastAnimationTime = null
 
     // o som acompanha o tempo da animação: o instante certo do áudio é calculado a
     // partir do tempo e, se o som estiver adiantado ou atrasado (ou passou do fim do
@@ -396,6 +397,7 @@ export async function createLuffy(gl) {
 
         nextPose() {
             poseIndex = (poseIndex + 1) % POSES.length
+            lastAnimationTime = null
             applyPose(POSES[poseIndex])
             // o navegador só deixa tocar som depois de uma ação do usuário; a troca de
             // pose vem da tecla P, então o play() é chamado aqui
@@ -406,12 +408,18 @@ export async function createLuffy(gl) {
         // poses animadas (respiração e quique): recalcula a pose a cada quadro
         update(time) {
             const pose = POSES[poseIndex]
+            // Emite só quando atravessa o fundo do quique, inclusive com FPS variável.
+            const impact = pose.bouncing && lastAnimationTime !== null &&
+                Math.floor((time - BOUNCE.impact) / BOUNCE.period) >
+                Math.floor((lastAnimationTime - BOUNCE.impact) / BOUNCE.period)
+            lastAnimationTime = time
             if (pose.breathing) applyPose(pose, breathingBones(time))
             if (pose.bouncing) {
                 const { root, bones } = bouncingBones(pose, time)
                 applyPose({ ...pose, root }, bones)
                 syncBounceSound(time)
             }
+            return impact
         },
 
         // usa o programa de skinning, com os uniformes de luz/câmera já definidos

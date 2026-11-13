@@ -200,7 +200,7 @@ function frame(now) {
     resize(gl)
     updateCamera(dt)
     updateNode(state.scene, dt)
-    state.luffy.update(state.time)
+    if (state.luffy.update(state.time)) state.particles.emitImpact(state.luffy.position, state.time)
     render(gl)
     requestAnimationFrame(frame)
 }
