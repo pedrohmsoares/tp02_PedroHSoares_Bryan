@@ -390,6 +390,10 @@ export async function createLuffy(gl) {
     }
 
     return {
+        get position() {
+            return [modelMatrix[12], modelMatrix[13], modelMatrix[14]]
+        },
+
         nextPose() {
             poseIndex = (poseIndex + 1) % POSES.length
             applyPose(POSES[poseIndex])

@@ -2,7 +2,7 @@
 
 ## A Cena
 
-Nosso diorama é inspirado na luta do Luffy contra o Doflamingo, em Dressrosa, de *One Piece*. A ideia foi colocar o Luffy Gear 4 numa ilha pequena, com as ruínas da cidade e a gaiola em volta. O catavento e o girassol ficaram como detalhes no meio dos destroços.
+Nosso diorama é inspirado na luta do Luffy contra o Doflamingo, em Dressrosa, de *One Piece*. A ideia foi colocar o Luffy Gear 4 numa ilha pequena, com as ruínas da cidade e a gaiola em volta. O catavento e o girassol ficaram como detalhes no meio dos destroços. Alguns fragmentos ficam suspensos pelo impacto, com poeira no ar e vapor subindo em volta do Luffy.
 
 O Luffy tem três poses. Na primeira ele respira, na segunda fica quicando com o som do anime e na terceira prepara o King Kong Gun. Ainda estamos ajustando a cena.
 
@@ -62,6 +62,7 @@ Os trechos abaixo são os itens do enunciado que implementamos:
 - **Câmera de navegação livre com WASD para voar e mouse para mudar direção.** A terceira câmera também tem Q/E para movimento vertical.
 - **Neblina:** “funcionalidade acrescentada por comando do teclado (N), podendo ser habilitada e desabilitada durante a execução”. A névoa é mais densa perto do chão, com transição suave ao ligar e desligar.
 - **Material transparente:** “tenha algo como vidro ou outra coisa que seja semitransparente. Detalhe: objetos transparentes devem ser desenhados por último.” A gaiola é translúcida e é desenhada depois dos objetos opacos.
+- **Efeitos de partículas:** “para simular fenômenos como fogo, fumaça, água etc.” Usamos partículas para o vapor ao redor do Luffy e para a poeira suspensa. Elas nascem, sobem e desaparecem aos poucos.
 - **Música, efeitos sonoros e/ou som ambiente:** “inclua música de fundo, sons ambiente e efeitos sonoros (este último, caso haja algum tipo de interação)”. Ao entrar na segunda pose com P, o som acompanha o quique. Nas outras poses ele para.
 
 ## Créditos

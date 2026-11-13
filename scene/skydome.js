@@ -5,8 +5,8 @@ import { createProgramFromFiles, getUniformLocations } from '../utils/shader.js'
 const SKY_RADIUS = 50
 
 // azul claro no horizonte e mais forte no alto, como o céu fora da gaiola
-export const HORIZON_COLOR = [0.7, 0.83, 0.95]
-const ZENITH_COLOR = [0.15, 0.45, 0.85]
+export const HORIZON_COLOR = [0.76, 0.86, 0.96]
+const ZENITH_COLOR = [0.08, 0.35, 0.69]
 
 const UNIFORMS = [
     'u_view', 'u_projection', 'u_cameraPosition', 'u_time',
@@ -16,8 +16,8 @@ const UNIFORMS = [
 export async function createSkydome(gl) {
     const program = await createProgramFromFiles(gl, 'shaders/sky.vertex.glsl', 'shaders/sky.fragment.glsl')
     const locations = getUniformLocations(gl, program, UNIFORMS)
-    // skydome: só a metade de cima da esfera. Abaixo do horizonte aparece a cor de fundo
-    const mesh = createMesh(gl, primitives.createSphereVertices(SKY_RADIUS, 32, 16, 0, Math.PI / 2))
+    // Esfera completa para a câmera livre também ter fundo ao olhar para baixo.
+    const mesh = createMesh(gl, primitives.createSphereVertices(SKY_RADIUS, 48, 32))
 
     return {
         // desenhado antes de tudo, sem teste de profundidade: qualquer objeto fica na frente.

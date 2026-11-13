@@ -45,13 +45,28 @@ void main() {
     vec3 dir = normalize(v_direction);
     float height = clamp(dir.y, 0.0, 1.0);
 
-    vec3 color = mix(u_horizonColor, u_zenithColor, sqrt(height));
+    vec3 color = mix(u_horizonColor, u_zenithColor, pow(height, 0.65));
+    // O fundo abaixo da ilha também tem um gradiente, sem uma emenda no horizonte.
+    color = mix(color, vec3(0.23, 0.31, 0.43), smoothstep(0.0, 1.0, -dir.y));
 
-    // nuvens: projeta a direção num "teto" plano acima da cena e aplica o ruído.
-    // O smoothstep estreito deixa a borda das nuvens bem definida, com cara de desenho
-    vec2 uv = dir.xz / (dir.y + 0.2) * 1.5 + vec2(u_time * 0.01, 0.0);
-    float clouds = smoothstep(0.55, 0.62, fbm(uv)) * smoothstep(0.02, 0.2, dir.y);
-    color = mix(color, vec3(1.0), clouds * 0.9);
+    vec3 sunDirection = normalize(vec3(0.4, 1.0, 0.3));
+    float sun = max(dot(dir, sunDirection), 0.0);
+    color += vec3(1.0, 0.77, 0.45) * pow(sun, 28.0) * 0.22;
+
+    // Duas camadas em velocidades diferentes evitam um teto de nuvens uniforme.
+    vec2 uv = dir.xz / (max(dir.y, 0.0) + 0.25);
+    vec2 wind = vec2(u_time * 0.012, u_time * 0.003);
+    float wisps = smoothstep(0.42, 0.7, fbm(uv * 3.2 + wind * 0.45));
+    color = mix(color, vec3(0.86, 0.92, 1.0), wisps * 0.3 * smoothstep(0.0, 0.2, dir.y));
+
+    vec2 cloudUV = uv * 1.4 + wind;
+    float cloudNoise = fbm(cloudUV + vec2(fbm(cloudUV * 0.6)) * 0.7);
+    float clouds = smoothstep(0.43, 0.59, cloudNoise) * smoothstep(0.0, 0.14, dir.y);
+    float cloudLight = smoothstep(0.43, 0.68, cloudNoise);
+    vec3 cloudColor = mix(vec3(0.62, 0.73, 0.86), vec3(1.0, 0.98, 0.92), cloudLight);
+    color = mix(color, cloudColor, clouds * 0.94);
+    float sunDisc = smoothstep(0.9987, 0.9993, sun) * (1.0 - clouds * 0.9);
+    color = mix(color, vec3(1.0, 0.95, 0.77), sunDisc);
 
     // Névoa no horizonte, mantendo o azul e as nuvens no alto.
     if (u_fogEnabled) {

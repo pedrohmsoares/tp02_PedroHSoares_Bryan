@@ -10,6 +10,7 @@ out vec4 o_color;
 uniform vec3 u_cameraPosition;
 uniform float u_lineCount;
 uniform vec3 u_lineColor;
+uniform float u_time;
 
 uniform bool u_fogEnabled;
 uniform vec3 u_fogColor;
@@ -38,19 +39,21 @@ void main() {
     float longitude = atan(v_localPos.z, v_localPos.x);
     float t = fract(longitude / (2.0 * PI) * u_lineCount);
     float distanceToLine = min(t, 1.0 - t);
-    float line = 1.0 - smoothstep(0.04, 0.08, distanceToLine);
+    // A largura cresce só o necessário para evitar serrilhado quando a câmera afasta.
+    float pixelWidth = min(fwidth(longitude) / (2.0 * PI) * u_lineCount, 0.08);
+    float line = 1.0 - smoothstep(0.018, 0.018 + max(pixelWidth, 0.008), distanceToLine);
+    if (line < 0.01) discard;
 
-    // perto do topo as linhas se juntam: deixamos o topo mais branco, como na imagem
-    float height = normalize(v_localPos).y;
-    line = max(line, smoothstep(0.9, 1.0, height) * 0.8);
-
-    // o "vidro" fica mais visível na borda (onde a superfície é vista de lado)
+    // Os fios laterais ficam mais discretos para não esconder o personagem.
     vec3 N = normalize(v_normal);
     vec3 V = normalize(u_cameraPosition - v_worldPos);
     float rim = 1.0 - abs(dot(N, V));
 
-    float alpha = mix(0.05 + 0.15 * rim, 0.65, line);
-    vec3 color = u_lineColor;
+    float height = normalize(v_localPos).y;
+    float alpha = line * mix(0.8, 0.35, rim) * (gl_FrontFacing ? 1.0 : 0.45);
+    alpha *= 1.0 - smoothstep(0.97, 1.0, height) * 0.7;
+    float glint = pow(max(0.0, sin(height * 18.0 - u_time * 1.6 + longitude * 2.0)), 18.0);
+    vec3 color = mix(u_lineColor, vec3(1.0, 0.88, 0.66), glint * 0.4);
 
     if (u_fogEnabled) {
         color = mix(color, u_fogColor, fogOpacity(v_worldPos));

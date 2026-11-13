@@ -11,6 +11,8 @@ import { createPinwheel } from './scene/pinwheel.js'
 import { createLuffy } from './scene/luffy.js'
 import { createSkydome, HORIZON_COLOR } from './scene/skydome.js'
 import { createBirdcage } from './scene/birdcage.js'
+import { createDebris } from './scene/debris.js'
+import { createParticles } from './scene/particles.js'
 
 const UNIFORMS = [
     'u_model', 'u_view', 'u_projection',
@@ -48,6 +50,7 @@ const state = {
     scene: null,
     sky: null,
     cage: null,
+    particles: null,
     time: 0
 }
 
@@ -97,12 +100,14 @@ async function initialize(gl) {
             createRocks(gl),
             createRuin(gl),
             createSunflower(gl),
-            createPinwheel(gl)
+            createPinwheel(gl),
+            createDebris(gl)
         ])
     })
 
     state.sky = await createSkydome(gl)
     state.cage = await createBirdcage(gl)
+    state.particles = await createParticles(gl)
 
     gl.enable(gl.DEPTH_TEST)
     gl.enable(gl.CULL_FACE)
@@ -172,8 +177,10 @@ function render(gl) {
     setSceneUniforms(gl, state.skinLocations)
     state.luffy.draw(gl, state.skinLocations)
 
-    // transparentes por último
-    state.cage.draw(gl, view)
+    // Gaiola e partículas envolvem a cena: fundo, vapor e fios da frente.
+    state.cage.draw(gl, view, 'back')
+    state.particles.draw(gl, view, state.luffy.position)
+    state.cage.draw(gl, view, 'front')
     gl.bindVertexArray(null)
 }
 
