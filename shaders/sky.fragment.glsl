@@ -11,6 +11,7 @@ uniform vec3 u_zenithColor;
 
 uniform bool u_fogEnabled;
 uniform vec3 u_fogColor;
+uniform float u_fogAmount;
 
 // textura procedural: ruído de valor (valores aleatórios nos cantos de uma
 // grade, interpolados suavemente) somado em várias escalas (fbm)
@@ -52,10 +53,10 @@ void main() {
     float clouds = smoothstep(0.55, 0.62, fbm(uv)) * smoothstep(0.02, 0.2, dir.y);
     color = mix(color, vec3(1.0), clouds * 0.9);
 
-    // com neblina, o horizonte vira a cor da neblina e os objetos somem no fundo
+    // Névoa no horizonte, mantendo o azul e as nuvens no alto.
     if (u_fogEnabled) {
-        float fogAmount = mix(1.0, 0.5, smoothstep(0.0, 0.5, height));
-        color = mix(color, u_fogColor, fogAmount);
+        float fogAmount = mix(0.55, 0.02, smoothstep(0.0, 0.55, height));
+        color = mix(color, u_fogColor, fogAmount * u_fogAmount);
     }
 
     o_color = vec4(color, 1.0);

@@ -10,7 +10,7 @@ const ZENITH_COLOR = [0.15, 0.45, 0.85]
 
 const UNIFORMS = [
     'u_view', 'u_projection', 'u_cameraPosition', 'u_time',
-    'u_horizonColor', 'u_zenithColor', 'u_fogEnabled', 'u_fogColor'
+    'u_horizonColor', 'u_zenithColor', 'u_fogEnabled', 'u_fogColor', 'u_fogAmount'
 ]
 
 export async function createSkydome(gl) {
@@ -32,8 +32,9 @@ export async function createSkydome(gl) {
             gl.uniform1f(locations.u_time, time)
             gl.uniform3fv(locations.u_horizonColor, HORIZON_COLOR)
             gl.uniform3fv(locations.u_zenithColor, ZENITH_COLOR)
-            gl.uniform1i(locations.u_fogEnabled, fog.enabled)
+            gl.uniform1i(locations.u_fogEnabled, fog.amount > 0.001)
             gl.uniform3fv(locations.u_fogColor, fog.color)
+            gl.uniform1f(locations.u_fogAmount, fog.amount)
             mesh.draw(gl)
             gl.enable(gl.DEPTH_TEST)
             gl.enable(gl.CULL_FACE)

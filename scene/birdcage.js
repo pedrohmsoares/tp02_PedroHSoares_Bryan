@@ -10,7 +10,8 @@ const HEIGHT_SCALE = 1.15
 
 const UNIFORMS = [
     'u_model', 'u_view', 'u_projection', 'u_cameraPosition',
-    'u_lineCount', 'u_lineColor', 'u_fogEnabled', 'u_fogColor', 'u_fogDensity'
+    'u_lineCount', 'u_lineColor', 'u_fogEnabled', 'u_fogColor', 'u_fogDensity',
+    'u_fogStart', 'u_fogHeightFalloff', 'u_fogAmount'
 ]
 
 // gaiola do Doflamingo: metade de cima de uma esfera com o mesmo raio do chão,
@@ -38,9 +39,12 @@ export async function createBirdcage(gl) {
             gl.uniform3fv(locations.u_cameraPosition, camera.position)
             gl.uniform1f(locations.u_lineCount, LINE_COUNT)
             gl.uniform3fv(locations.u_lineColor, LINE_COLOR)
-            gl.uniform1i(locations.u_fogEnabled, fog.enabled)
+            gl.uniform1i(locations.u_fogEnabled, fog.amount > 0.001)
             gl.uniform3fv(locations.u_fogColor, fog.color)
             gl.uniform1f(locations.u_fogDensity, fog.density)
+            gl.uniform1f(locations.u_fogStart, fog.start)
+            gl.uniform1f(locations.u_fogHeightFalloff, fog.heightFalloff)
+            gl.uniform1f(locations.u_fogAmount, fog.amount)
             mesh.draw(gl)
 
             gl.enable(gl.CULL_FACE)

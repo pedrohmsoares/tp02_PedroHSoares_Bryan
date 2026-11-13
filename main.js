@@ -17,7 +17,7 @@ const UNIFORMS = [
     'u_texture', 'u_baseColor',
     'u_lightDirection', 'u_lightColor', 'u_cameraPosition', 'u_lightingEnabled',
     'u_ambient', 'u_diffuse', 'u_specular', 'u_shininess',
-    'u_fogEnabled', 'u_fogColor', 'u_fogDensity'
+    'u_fogEnabled', 'u_fogColor', 'u_fogDensity', 'u_fogStart', 'u_fogHeightFalloff', 'u_fogAmount'
 ]
 // o programa do Luffy usa os mesmos uniformes, mais as matrizes dos ossos
 const SKIN_UNIFORMS = [...UNIFORMS, 'u_bones']
@@ -36,11 +36,14 @@ const state = {
         color: [1.0, 0.88, 0.72],
         enabled: true
     },
-    // cinza-poeira, combinando com o clima de destruição
+    // Névoa baixa: preserva o primeiro plano e perde densidade com a altura.
     fog: {
         enabled: false,
-        color: [0.55, 0.52, 0.48],
-        density: 0.06
+        color: [0.75, 0.78, 0.80],
+        density: 0.085,
+        start: 4,
+        heightFalloff: 0.45,
+        amount: 0
     },
     scene: null,
     sky: null,
@@ -60,14 +63,23 @@ function resize(gl) {
     state.projectionMatrix = m4.perspective(Math.PI / 3, width / height, 0.1, 100)
 }
 
+function updateControls() {
+    const names = { 1: 'automática', 2: 'orbital', 3: 'livre' }
+    document.querySelector('#scene-status').textContent = `Câmera ${names[camera.mode]} · Neblina ${state.fog.enabled ? 'ligada' : 'desligada'} · Luz ${state.light.enabled ? 'ligada' : 'desligada'}`
+    document.querySelector('#camera-help').hidden = camera.mode === 3
+    document.querySelector('#free-help').hidden = camera.mode !== 3
+}
+
 function setupKeyboard() {
     window.addEventListener('keydown', (e) => {
         if (e.repeat) return
         if (e.code === 'Digit1') selectCamera(1)
-        if (e.code === 'Digit2') selectCamera(2)
+        if (e.code === 'Digit2') selectCamera(camera.mode === 2 ? 1 : 2)
+        if (e.code === 'Digit3') selectCamera(3)
         if (e.code === 'KeyL') state.light.enabled = !state.light.enabled
         if (e.code === 'KeyN') state.fog.enabled = !state.fog.enabled
         if (e.code === 'KeyP') state.luffy.nextPose()
+        updateControls()
     })
 }
 
@@ -97,6 +109,7 @@ async function initialize(gl) {
 
     setupCameraControls(gl.canvas)
     setupKeyboard()
+    updateControls()
 }
 
 // percorre o grafo de cena: a matriz do mundo de cada nó é a do pai vezes a sua
@@ -130,18 +143,20 @@ function setSceneUniforms(gl, locations) {
     gl.uniform3fv(locations.u_lightDirection, light.direction)
     gl.uniform3fv(locations.u_lightColor, light.color)
     gl.uniform1i(locations.u_lightingEnabled, light.enabled)
-    gl.uniform1i(locations.u_fogEnabled, fog.enabled)
+    gl.uniform1i(locations.u_fogEnabled, fog.amount > 0.001)
     gl.uniform3fv(locations.u_fogColor, fog.color)
     gl.uniform1f(locations.u_fogDensity, fog.density)
+    gl.uniform1f(locations.u_fogStart, fog.start)
+    gl.uniform1f(locations.u_fogHeightFalloff, fog.heightFalloff)
+    gl.uniform1f(locations.u_fogAmount, fog.amount)
     gl.uniform1i(locations.u_texture, 0)
 }
 
 function render(gl) {
     const { fog } = state
 
-    // abaixo do horizonte do skydome aparece a cor de fundo: a do horizonte do céu,
-    // ou a da neblina quando ela está ligada (como no glFog visto em aula)
-    gl.clearColor(...(fog.enabled ? fog.color : HORIZON_COLOR), 1)
+    const background = HORIZON_COLOR.map((value, k) => value + (fog.color[k] - value) * 0.55 * fog.amount)
+    gl.clearColor(...background, 1)
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
     const view = { camera, projectionMatrix: state.projectionMatrix, fog, time: state.time }
@@ -171,6 +186,7 @@ function frame(now) {
     const dt = Math.min((now - lastTime) / 1000, 0.1)
     lastTime = now
     state.time += dt
+    state.fog.amount += ((state.fog.enabled ? 1 : 0) - state.fog.amount) * (1 - Math.exp(-4 * dt))
 
     resize(gl)
     updateCamera(dt)

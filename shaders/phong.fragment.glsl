@@ -22,10 +22,26 @@ uniform float u_diffuse;
 uniform float u_specular;
 uniform float u_shininess;
 
-// neblina exponencial ao quadrado (GL_EXP2)
+// Neblina com densidade decrescente conforme a altura.
 uniform bool u_fogEnabled;
 uniform vec3 u_fogColor;
 uniform float u_fogDensity;
+uniform float u_fogStart;
+uniform float u_fogHeightFalloff;
+uniform float u_fogAmount;
+
+float fogOpacity(vec3 point) {
+    float d = distance(u_cameraPosition, point);
+    // Integra a densidade em seis pontos do caminho entre câmera e superfície.
+    float density = 0.0;
+    for (int i = 0; i < 6; i++) {
+        float t = (float(i) + 0.5) / 6.0;
+        float height = mix(u_cameraPosition.y, point.y, t);
+        density += exp(-max(height, 0.0) * u_fogHeightFalloff);
+    }
+    float depth = max(d - u_fogStart, 0.0) * u_fogDensity * density / 6.0;
+    return min(1.0 - exp(-depth), 0.7) * u_fogAmount;
+}
 
 void main() {
     vec3 albedo = (texture(u_texture, v_texcoord) * u_baseColor).rgb;
@@ -49,9 +65,7 @@ void main() {
     }
 
     if (u_fogEnabled) {
-        float d = distance(u_cameraPosition, v_worldPos);
-        float fogFactor = exp(-pow(u_fogDensity * d, 2.0));
-        color = mix(u_fogColor, color, fogFactor);
+        color = mix(color, u_fogColor, fogOpacity(v_worldPos));
     }
 
     o_color = vec4(color, 1.0);

@@ -8,6 +8,20 @@
 </head>
 <body>
   <canvas id="canvas"></canvas>
+  <aside class="controls" aria-label="Comandos da cena">
+    <h1>Paraíso do Luffy</h1>
+    <p id="scene-status" role="status">Câmera automática · Neblina desligada</p>
+    <dl>
+      <div><dt><kbd>P</kbd></dt><dd>Pose / pulo</dd></div>
+      <div><dt><kbd>N</kbd></dt><dd>Neblina</dd></div>
+      <div><dt><kbd>2</kbd></dt><dd>Trocar câmera</dd></div>
+      <div><dt><kbd>3</kbd></dt><dd>Câmera livre</dd></div>
+      <div><dt><kbd>1</kbd></dt><dd>Câmera automática</dd></div>
+      <div><dt><kbd>L</kbd></dt><dd>Iluminação</dd></div>
+    </dl>
+    <p id="camera-help">Arraste na câmera orbital · Scroll para aproximar</p>
+    <p class="free-help" id="free-help" hidden><kbd>W A S D</kbd> mover · <kbd>Q / E</kbd> descer / subir<br><kbd>Shift</kbd> acelerar · Arraste para olhar</p>
+  </aside>
   <script type="module" src="main.js"></script>
 </body>
 </html>
