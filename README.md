@@ -22,6 +22,7 @@ Depois abra <http://localhost:8000> em um navegador com suporte a WebGL2. É pre
 | --- | --- |
 | P | Alterna as três poses; a segunda tem a animação de pulo |
 | N | Liga ou desliga a neblina |
+| G | Mostra ou oculta a gaiola |
 | L | Liga ou desliga a iluminação |
 | 1 | Volta para a câmera automática |
 | 2 | Alterna entre câmera orbital e automática |

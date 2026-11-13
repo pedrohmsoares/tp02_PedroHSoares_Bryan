@@ -50,6 +50,7 @@ const state = {
     scene: null,
     sky: null,
     cage: null,
+    cageVisible: true,
     particles: null,
     time: 0
 }
@@ -68,7 +69,7 @@ function resize(gl) {
 
 function updateControls() {
     const names = { 1: 'automática', 2: 'orbital', 3: 'livre' }
-    document.querySelector('#scene-status').textContent = `Câmera ${names[camera.mode]} · Neblina ${state.fog.enabled ? 'ligada' : 'desligada'} · Luz ${state.light.enabled ? 'ligada' : 'desligada'}`
+    document.querySelector('#scene-status').textContent = `Câmera ${names[camera.mode]} · Neblina ${state.fog.enabled ? 'ligada' : 'desligada'} · Luz ${state.light.enabled ? 'ligada' : 'desligada'} · Gaiola ${state.cageVisible ? 'visível' : 'oculta'}`
     document.querySelector('#camera-help').hidden = camera.mode === 3
     document.querySelector('#free-help').hidden = camera.mode !== 3
 }
@@ -81,6 +82,7 @@ function setupKeyboard() {
         if (e.code === 'Digit3') selectCamera(3)
         if (e.code === 'KeyL') state.light.enabled = !state.light.enabled
         if (e.code === 'KeyN') state.fog.enabled = !state.fog.enabled
+        if (e.code === 'KeyG') state.cageVisible = !state.cageVisible
         if (e.code === 'KeyP') state.luffy.nextPose()
         updateControls()
     })
@@ -178,9 +180,9 @@ function render(gl) {
     state.luffy.draw(gl, state.skinLocations)
 
     // Gaiola e partículas envolvem a cena: fundo, vapor e fios da frente.
-    state.cage.draw(gl, view, 'back')
+    if (state.cageVisible) state.cage.draw(gl, view, 'back')
     state.particles.draw(gl, view, state.luffy.position)
-    state.cage.draw(gl, view, 'front')
+    if (state.cageVisible) state.cage.draw(gl, view, 'front')
     gl.bindVertexArray(null)
 }
 
