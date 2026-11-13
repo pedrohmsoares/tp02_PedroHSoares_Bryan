@@ -76,7 +76,7 @@ function updateControls() {
 
 function setupKeyboard() {
     window.addEventListener('keydown', (e) => {
-        if (e.repeat) return
+        if (e.repeat || e.target?.closest?.('input, textarea, select, [contenteditable="true"]')) return
         if (e.code === 'Digit1') selectCamera(1)
         if (e.code === 'Digit2') selectCamera(camera.mode === 2 ? 1 : 2)
         if (e.code === 'Digit3') selectCamera(3)

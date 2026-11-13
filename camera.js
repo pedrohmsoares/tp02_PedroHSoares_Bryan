@@ -50,6 +50,7 @@ export function setupCameraControls(canvas) {
     let last = null
     const movementKeys = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'ShiftLeft', 'ShiftRight']
     window.addEventListener('keydown', (e) => {
+        if (e.target?.closest?.('input, textarea, select, [contenteditable="true"]')) return
         if (!movementKeys.includes(e.code)) return
         keys.add(e.code)
         if (cameras.active === 3) e.preventDefault()
