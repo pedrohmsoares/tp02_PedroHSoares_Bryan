@@ -22,6 +22,22 @@
     </dl>
     <p id="camera-help">Arraste na câmera orbital · Scroll para aproximar</p>
     <p class="free-help" id="free-help" hidden><kbd>W A S D</kbd> mover · <kbd>Q / E</kbd> descer / subir<br><kbd>Shift</kbd> acelerar · Arraste para olhar</p>
+    <section class="sun-controls" aria-label="Posição do sol">
+      <h2>Posição do sol</h2>
+      <div class="sun-slider">
+        <label for="sun-azimuth">Direção</label>
+        <input id="sun-azimuth" type="range" min="-180" max="180" step="1" value="-155">
+        <output id="sun-azimuth-value" for="sun-azimuth">-155°</output>
+      </div>
+      <div class="sun-slider">
+        <label for="sun-elevation">Altura</label>
+        <input id="sun-elevation" type="range" min="8" max="70" step="1" value="12">
+        <output id="sun-elevation-value" for="sun-elevation">12°</output>
+      </div>
+      <p>Sol baixo alonga a sombra · Sol alto encurta</p>
+      <button id="sun-look" type="button">Olhar para o sol</button>
+      <button id="sun-return" class="sun-return" type="button"><kbd>1</kbd> Voltar à cena</button>
+    </section>
     <section class="music-controls" aria-label="Música de fundo">
       <div class="music-heading">
         <button id="music-toggle" type="button" aria-pressed="false">Tocar música</button>

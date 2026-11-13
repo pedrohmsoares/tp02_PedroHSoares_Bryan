@@ -8,6 +8,8 @@ O Luffy tem três poses. Na primeira ele respira, na segunda fica quicando com o
 
 O chão tem terra em tom ocre, rachaduras e placas levantadas. As paredes têm o topo quebrado e, quando o Luffy chega ao fundo do quique, uma nuvem de poeira se espalha perto dos pés.
 
+O céu procedural tem nuvens em duas camadas, relevo de iluminação, um disco solar visível com halo e um horizonte levemente dourado. No painel, os controles de direção e altura movem o sol e a luz dos objetos juntos. A silhueta animada do Luffy é projetada no chão no sentido oposto ao sol: fica comprida com o sol baixo e curta com o sol alto. Uma sombra de contato suave complementa a projeção durante o quique. A projeção recebe o relevo do piso, mas não projeta sombras sobre as ruínas ou o próprio personagem. A câmera automática usa um ângulo mais baixo para mostrar o personagem e o céu juntos.
+
 ### Como rodar
 
 O projeto usa WebGL2 e JavaScript, sem precisar instalar dependências. Na pasta do repositório, rode:

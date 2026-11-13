@@ -16,6 +16,8 @@ uniform mat4 u_bones[MAX_BONES];
 uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_projection;
+uniform bool u_shadowPass;
+uniform vec3 u_lightDirection;
 
 out vec3 v_normal;
 out vec3 v_worldPos;
@@ -33,6 +35,17 @@ void main() {
 
     v_normal = transpose(inverse(mat3(u_model))) * skinnedNormal;
     v_worldPos = (u_model * skinnedPosition).xyz;
+    if (u_shadowPass) {
+        // Projeção direcional sobre o piso: sol baixo alonga a silhueta.
+        float height = max(v_worldPos.y, 0.0);
+        v_worldPos.xz += u_lightDirection.xz * height / max(-u_lightDirection.y, 0.1);
+        // Mesmo relevo do disco de ground.js; deslocamento evita z-fighting.
+        float radius = length(v_worldPos.xz);
+        float inner = clamp((radius - 1.3) / 1.2, 0.0, 1.0);
+        float edge = clamp((6.0 - radius) / 0.8, 0.0, 1.0);
+        v_worldPos.y = inner * inner * edge *
+            (0.055 + 0.035 * sin(v_worldPos.x * 1.7) * cos(v_worldPos.z * 1.3)) + 0.025;
+    }
     v_texcoord = a_texcoord;
     gl_Position = u_projection * u_view * vec4(v_worldPos, 1.0);
 }

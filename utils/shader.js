@@ -2,7 +2,7 @@
 
 export function setupWebGL(selector) {
     const canvas = document.querySelector(selector)
-    const gl = canvas.getContext('webgl2')
+    const gl = canvas.getContext('webgl2', { stencil: true })
     if (!gl) {
         throw new Error('WebGL2 não suportado')
     }
@@ -38,8 +38,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
 
 export async function createProgramFromFiles(gl, vertexPath, fragmentPath) {
     const [vsSource, fsSource] = await Promise.all([
-        fetch(vertexPath).then(res => res.text()),
-        fetch(fragmentPath).then(res => res.text())
+        fetch(vertexPath, { cache: 'no-store' }).then(res => res.text()),
+        fetch(fragmentPath, { cache: 'no-store' }).then(res => res.text())
     ])
     const vs = createShader(gl, gl.VERTEX_SHADER, vsSource, vertexPath)
     const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource, fragmentPath)

@@ -33,6 +33,12 @@ export function selectCamera(number) {
     camera.mode = number
 }
 
+export function lookAtDirection(direction) {
+    selectCamera(3)
+    const length = Math.hypot(...direction)
+    cameras[3].yaw = Math.atan2(direction[0], -direction[2])
+    cameras[3].pitch = Math.asin(direction[1] / length)
+}
 
 function orbit(deltaAzimuth, deltaElevation) {
     const cam = cameras[2]

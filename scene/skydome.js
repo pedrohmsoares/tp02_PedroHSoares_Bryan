@@ -10,7 +10,7 @@ const ZENITH_COLOR = [0.07, 0.32, 0.66]
 
 const UNIFORMS = [
     'u_view', 'u_projection', 'u_cameraPosition', 'u_time',
-    'u_horizonColor', 'u_zenithColor', 'u_fogEnabled', 'u_fogColor', 'u_fogAmount'
+    'u_horizonColor', 'u_zenithColor', 'u_sunDirection', 'u_sunPass', 'u_fogEnabled', 'u_fogColor', 'u_fogAmount'
 ]
 
 export async function createSkydome(gl) {
@@ -22,7 +22,7 @@ export async function createSkydome(gl) {
     return {
         // desenhado antes de tudo, sem teste de profundidade: qualquer objeto fica na frente.
         // Sem culling porque vemos as faces de dentro da esfera
-        draw(gl, { camera, projectionMatrix, fog, time }) {
+        draw(gl, { camera, projectionMatrix, fog, time, light }) {
             gl.disable(gl.DEPTH_TEST)
             gl.disable(gl.CULL_FACE)
             gl.useProgram(program)
@@ -32,10 +32,16 @@ export async function createSkydome(gl) {
             gl.uniform1f(locations.u_time, time)
             gl.uniform3fv(locations.u_horizonColor, HORIZON_COLOR)
             gl.uniform3fv(locations.u_zenithColor, ZENITH_COLOR)
+            gl.uniform3fv(locations.u_sunDirection, light.direction.map(value => -value))
             gl.uniform1i(locations.u_fogEnabled, fog.amount > 0.001)
             gl.uniform3fv(locations.u_fogColor, fog.color)
             gl.uniform1f(locations.u_fogAmount, fog.amount)
+            gl.uniform1i(locations.u_sunPass, false)
             mesh.draw(gl)
+            // Uma esfera emissiva pequena garante um disco solar bem definido.
+            gl.uniform1i(locations.u_sunPass, true)
+            mesh.draw(gl)
+            gl.uniform1i(locations.u_sunPass, false)
             gl.enable(gl.DEPTH_TEST)
             gl.enable(gl.CULL_FACE)
         }

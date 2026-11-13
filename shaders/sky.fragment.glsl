@@ -8,6 +8,8 @@ out vec4 o_color;
 uniform float u_time;
 uniform vec3 u_horizonColor;
 uniform vec3 u_zenithColor;
+uniform vec3 u_sunDirection;
+uniform bool u_sunPass;
 
 uniform bool u_fogEnabled;
 uniform vec3 u_fogColor;
@@ -43,6 +45,13 @@ float fbm(vec2 p) {
 }
 
 void main() {
+    if (u_sunPass) {
+        vec3 sunDirection = normalize(u_sunDirection);
+        float center = max(dot(normalize(v_direction), -sunDirection), 0.0);
+        vec3 emission = mix(vec3(1.0, 0.73, 0.3), vec3(1.0, 0.96, 0.78), smoothstep(0.1, 0.7, sunDirection.y));
+        o_color = vec4(mix(emission * 0.94, emission, center), 1.0);
+        return;
+    }
     vec3 dir = normalize(v_direction);
     float height = clamp(dir.y, 0.0, 1.0);
 
@@ -50,7 +59,7 @@ void main() {
     // O fundo abaixo da ilha também tem um gradiente, sem uma emenda no horizonte.
     color = mix(color, vec3(0.23, 0.31, 0.43), smoothstep(0.0, 1.0, -dir.y));
 
-    vec3 sunDirection = normalize(vec3(0.4, 1.0, 0.3));
+    vec3 sunDirection = normalize(u_sunDirection);
     float sun = max(dot(dir, sunDirection), 0.0);
     // Halo amplo e discreto, com núcleo mais quente perto do disco solar.
     color = mix(color, vec3(1.0, 0.87, 0.67), pow(sun, 8.0) * 0.13);
@@ -87,8 +96,6 @@ void main() {
     float rim = (1.0 - smoothstep(0.47, 0.57, density)) * pow(sun, 10.0);
     cloudColor += vec3(1.0, 0.77, 0.43) * rim * 0.18;
     color = mix(color, cloudColor, clouds * 0.96);
-    float sunDisc = smoothstep(0.9987, 0.9993, sun) * (1.0 - clouds * 0.9);
-    color = mix(color, vec3(1.0, 0.95, 0.77), sunDisc);
 
     // Névoa no horizonte, mantendo o azul e as nuvens no alto.
     if (u_fogEnabled) {

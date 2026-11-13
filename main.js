@@ -1,7 +1,7 @@
 import { m4 } from './twgl.full.module.js'
 import { setupWebGL, createProgramFromFiles, getUniformLocations } from './utils/shader.js'
 import { createColorTexture } from './utils/texture.js'
-import { camera, selectCamera, setupCameraControls, updateCamera } from './camera.js'
+import { camera, selectCamera, lookAtDirection, setupCameraControls, updateCamera } from './camera.js'
 import { createNode, updateNode } from './utils/scene.js'
 import { createGround } from './scene/ground.js'
 import { createRocks } from './scene/rock.js'
@@ -14,13 +14,15 @@ import { createBirdcage } from './scene/birdcage.js'
 import { createDebris } from './scene/debris.js'
 import { createParticles } from './scene/particles.js'
 import { setupMusicControls } from './utils/music.js'
+import { INITIAL_SUN, sunDirection, sunColor, setupSunControls } from './utils/sun.js'
 
 const UNIFORMS = [
     'u_model', 'u_view', 'u_projection',
     'u_texture', 'u_baseColor',
     'u_lightDirection', 'u_lightColor', 'u_cameraPosition', 'u_lightingEnabled',
     'u_ambient', 'u_diffuse', 'u_specular', 'u_shininess',
-    'u_fogEnabled', 'u_fogColor', 'u_fogDensity', 'u_fogStart', 'u_fogHeightFalloff', 'u_fogAmount'
+    'u_fogEnabled', 'u_fogColor', 'u_fogDensity', 'u_fogStart', 'u_fogHeightFalloff', 'u_fogAmount',
+    'u_shadowPosition', 'u_receivesContactShadow', 'u_shadowPass'
 ]
 // o programa do Luffy usa os mesmos uniformes, mais as matrizes dos ossos
 const SKIN_UNIFORMS = [...UNIFORMS, 'u_bones']
@@ -33,10 +35,11 @@ const state = {
     luffy: null,
     projectionMatrix: m4.identity(),
     whiteTexture: null,
+    sun: { ...INITIAL_SUN },
     // luz do fim de tarde: vem de cima e um pouco de lado, tom quente
     light: {
-        direction: [-0.4, -1.0, -0.3],
-        color: [1.0, 0.88, 0.72],
+        direction: sunDirection(INITIAL_SUN).map(value => -value),
+        color: sunColor(INITIAL_SUN),
         enabled: true
     },
     // Névoa baixa: preserva o primeiro plano e perde densidade com a altura.
@@ -119,6 +122,18 @@ async function initialize(gl) {
 
     setupCameraControls(gl.canvas)
     state.music = setupMusicControls()
+    setupSunControls(state.sun, () => {
+        state.light.direction = sunDirection(state.sun).map(value => -value)
+        state.light.color = sunColor(state.sun)
+    })
+    document.querySelector('#sun-look').addEventListener('click', () => {
+        lookAtDirection(sunDirection(state.sun))
+        updateControls()
+    })
+    document.querySelector('#sun-return').addEventListener('click', () => {
+        selectCamera(1)
+        updateControls()
+    })
     setupKeyboard()
     updateControls()
 }
@@ -137,6 +152,10 @@ function drawNode(gl, node, parentMatrix) {
         gl.uniform1f(locations.u_diffuse, material.diffuse)
         gl.uniform1f(locations.u_specular, material.specular)
         gl.uniform1f(locations.u_shininess, material.shininess)
+        gl.uniform1i(locations.u_receivesContactShadow, material.receivesContactShadow === true)
+        // Só a superfície visível do piso recebe a silhueta projetada.
+        gl.stencilMask(0xff)
+        gl.stencilFunc(gl.ALWAYS, material.receivesContactShadow ? 1 : 0, 0xff)
         node.mesh.draw(gl)
     }
 
@@ -154,6 +173,9 @@ function setSceneUniforms(gl, locations) {
     gl.uniform3fv(locations.u_lightDirection, light.direction)
     gl.uniform3fv(locations.u_lightColor, light.color)
     gl.uniform1i(locations.u_lightingEnabled, light.enabled)
+    gl.uniform3fv(locations.u_shadowPosition, state.luffy.position)
+    gl.uniform1i(locations.u_receivesContactShadow, false)
+    gl.uniform1i(locations.u_shadowPass, false)
     gl.uniform1i(locations.u_fogEnabled, fog.amount > 0.001)
     gl.uniform3fv(locations.u_fogColor, fog.color)
     gl.uniform1f(locations.u_fogDensity, fog.density)
@@ -168,20 +190,44 @@ function render(gl) {
 
     const background = HORIZON_COLOR.map((value, k) => value + (fog.color[k] - value) * 0.55 * fog.amount)
     gl.clearColor(...background, 1)
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    gl.stencilMask(0xff)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
 
-    const view = { camera, projectionMatrix: state.projectionMatrix, fog, time: state.time }
+    const view = { camera, projectionMatrix: state.projectionMatrix, fog, time: state.time, light: state.light }
     state.sky.draw(gl, view)
 
     gl.useProgram(state.program)
     setSceneUniforms(gl, state.locations)
     gl.activeTexture(gl.TEXTURE0)
 
+    gl.enable(gl.STENCIL_TEST)
+    gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
     drawNode(gl, state.scene, m4.identity())
+    gl.disable(gl.STENCIL_TEST)
 
     gl.useProgram(state.skinProgram)
     setSceneUniforms(gl, state.skinLocations)
     state.luffy.draw(gl, state.skinLocations)
+
+    if (state.light.enabled) {
+        // A silhueta usa os mesmos ossos da pose. O stencil evita escurecer
+        // várias vezes onde triângulos projetados se sobrepõem.
+        gl.enable(gl.STENCIL_TEST)
+        gl.stencilFunc(gl.EQUAL, 1, 0xff)
+        gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR)
+        gl.enable(gl.BLEND)
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+        gl.disable(gl.CULL_FACE)
+        gl.depthMask(false)
+        gl.uniform1i(state.skinLocations.u_shadowPass, true)
+        state.luffy.draw(gl, state.skinLocations)
+        gl.uniform1i(state.skinLocations.u_shadowPass, false)
+        gl.depthMask(true)
+        gl.enable(gl.CULL_FACE)
+        gl.disable(gl.BLEND)
+        gl.disable(gl.STENCIL_TEST)
+        gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+    }
 
     // Gaiola e partículas envolvem a cena: fundo, vapor e fios da frente.
     if (state.cageVisible) state.cage.draw(gl, view, 'back')

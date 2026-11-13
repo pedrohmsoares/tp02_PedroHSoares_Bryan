@@ -29,6 +29,16 @@ html, body {
 .controls p { margin: 8px 0 0; color: #d4dce2; font-size: 12px; }
 .controls #scene-status { color: #f1d193; }
 .controls { max-height: calc(100dvh - 64px); }
+.sun-controls { margin-top: 14px; padding-top: 10px; border-top: 1px solid #ffffff25; pointer-events: auto; }
+.sun-controls h2 { margin: 0 0 7px; font-size: 13px; font-weight: 600; }
+.sun-slider { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.sun-slider label { min-width: 5ch; }
+.sun-slider input { flex: 1; min-width: 60px; width: 100px; accent-color: #eed299; }
+.sun-slider output { min-width: 5ch; text-align: right; }
+.sun-controls :focus-visible { outline: 2px solid #ffe3ac; outline-offset: 3px; }
+.sun-controls button { margin-top: 8px; padding: 5px 9px; border: 1px solid #eed29980; border-radius: 6px; background: #eed299; color: #18212a; font: inherit; cursor: pointer; }
+.sun-controls button:hover { background: #ffe3ac; }
+.sun-controls .sun-return { margin-left: 6px; background: transparent; color: #d4dce2; font-size: 11px; }
 .music-controls { margin-top: 14px; padding-top: 12px; border-top: 1px solid #ffffff25; pointer-events: auto; }
 .music-heading { display: flex; align-items: center; gap: 10px; }
 .music-controls button {

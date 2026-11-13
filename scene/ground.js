@@ -105,13 +105,13 @@ export async function createGround(gl) {
                 mesh: createMesh(gl, disc),
                 texture: groundTexture,
                 color: [1.25, 0.88, 0.58, 1],
-                material: { ambient: 0.45, diffuse: 0.85, specular: 0.05, shininess: 4 }
+                material: { ambient: 0.45, diffuse: 0.85, specular: 0.05, shininess: 4, receivesContactShadow: true }
             }),
             createNode({ mesh: createMesh(gl, createCracks()), color: [0.17, 0.09, 0.045, 1],
-                material: { ambient: 0.65, diffuse: 0.5, specular: 0, shininess: 1 } }),
+                material: { ambient: 0.65, diffuse: 0.5, specular: 0, shininess: 1, receivesContactShadow: true } }),
             ...plates.map(([x, z, size], i) => createNode({
                 mesh: slab, texture: groundTexture, color: [1.2, 0.86, 0.57, 1],
-                material: { ambient: 0.45, diffuse: 0.85, specular: 0.03, shininess: 4 },
+                material: { ambient: 0.45, diffuse: 0.85, specular: 0.03, shininess: 4, receivesContactShadow: true },
                 matrix: transform({ translation: [x, groundHeight(x, z) + 0.045, z],
                     rotation: [0.1 * Math.sin(i), i * 1.4, 0.08 * Math.cos(i)], scale: [size, 1, size] })
             })),

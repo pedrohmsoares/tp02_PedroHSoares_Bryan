@@ -1,5 +1,21 @@
 # Diário de Bordo — TP2 Paraíso (Computação Gráfica)
 
+## [2026-11-13] Sol controlável e sombra da silhueta do Luffy
+
+**Código alterado/adicionado/removido:** `utils/sun.js`, `index.html`, `style.css`, `main.js`, `utils/shader.js`, `scene/skydome.js`, shaders do céu, de skinning e de Phong, e ajuste de enquadramento em `camera.js`.
+
+**Descrição:** Dois controles no painel alteram a direção e a altura do sol em graus. O disco solar, o relevo iluminado das nuvens e a luz direcional dos objetos usam a mesma direção. O sol baixo tem luz mais quente. A sombra usa uma segunda passagem do modelo com os mesmos ossos da pose, projetando seus vértices sobre o chão no sentido da luz. O stencil restringe a projeção à superfície visível do piso e impede que triângulos sobrepostos escureçam a sombra várias vezes. A projeção é uma aproximação planar ajustada ao relevo do disco; não substitui um mapa de sombras sobre objetos tridimensionais. Os testes numéricos conferem a direção oposta ao sol e o aumento do comprimento da sombra ao reduzir a altura solar.
+
+---
+
+## [2026-11-13] Acabamento do céu, enquadramento e sombra de contato
+
+**Código alterado/adicionado/removido:** `scene/skydome.js`, `shaders/sky.fragment.glsl`, `main.js`, `scene/ground.js`, `shaders/phong.fragment.glsl` e `camera.js`.
+
+**Descrição:** O céu mantém o azul de Dressrosa e ganha halo solar suave, névoa distante com um toque dourado e nuvens com variação de cobertura, bases sombreadas e bordas iluminadas. O relevo das nuvens é aproximado por uma amostra de ruído na direção do sol, sem ray marching. A direção solar é compartilhada com a iluminação dos objetos. A sombra de contato é uma elipse suave calculada no shader do chão, antes da neblina, que se espalha e enfraquece com a altura do personagem. Ela só afeta o piso, as rachaduras e as placas de pedra, e desliga com a iluminação. A câmera automática foi abaixada e o ponto de interesse elevado para incluir mais céu no enquadramento.
+
+---
+
 Registro de todas as alterações e adições feitas no código.
 
 **Padrão de cada entrada:**

@@ -15,6 +15,9 @@ uniform vec3 u_lightDirection;
 uniform vec3 u_lightColor;
 uniform vec3 u_cameraPosition;
 uniform bool u_lightingEnabled;
+uniform vec3 u_shadowPosition;
+uniform bool u_receivesContactShadow;
+uniform bool u_shadowPass;
 
 // material do objeto
 uniform float u_ambient;
@@ -44,6 +47,12 @@ float fogOpacity(vec3 point) {
 }
 
 void main() {
+    if (u_shadowPass) {
+        float opacity = 0.38;
+        if (u_fogEnabled) opacity *= 1.0 - fogOpacity(v_worldPos);
+        o_color = vec4(0.09, 0.07, 0.06, opacity);
+        return;
+    }
     vec3 albedo = (texture(u_texture, v_texcoord) * u_baseColor).rgb;
     vec3 color = albedo;
 
@@ -62,6 +71,18 @@ void main() {
         vec3 specular = u_specular * specularFactor * u_lightColor;
 
         color = ambient + diffuse + specular;
+    }
+
+    // Sombra de contato aproximada, aplicada só ao chão e antes da neblina.
+    // Ao subir, ela se espalha e enfraquece; ao descer, fica mais concentrada.
+    if (u_lightingEnabled && u_receivesContactShadow) {
+        float lift = max(u_shadowPosition.y, 0.0);
+        vec2 center = u_shadowPosition.xz + u_lightDirection.xz * lift / max(abs(u_lightDirection.y), 0.1);
+        vec2 radius = vec2(0.78, 0.58) + lift * 0.45;
+        vec2 offset = (v_worldPos.xz - center) / radius;
+        float r2 = dot(offset, offset);
+        float shadow = exp(-r2 * 2.0) * (1.0 - smoothstep(2.0, 4.0, r2));
+        color *= 1.0 - shadow * 0.18 / (1.0 + lift * 1.6);
     }
 
     if (u_fogEnabled) {
