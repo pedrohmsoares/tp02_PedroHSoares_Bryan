@@ -26,15 +26,19 @@
       <h2>Posição do sol</h2>
       <div class="sun-slider">
         <label for="sun-azimuth">Direção</label>
-        <input id="sun-azimuth" type="range" min="-180" max="180" step="1" value="-155">
-        <output id="sun-azimuth-value" for="sun-azimuth">-155°</output>
+        <input id="sun-azimuth" type="range" min="-180" max="180" step="1" value="35">
+        <output id="sun-azimuth-value" for="sun-azimuth">35°</output>
       </div>
       <div class="sun-slider">
         <label for="sun-elevation">Altura</label>
-        <input id="sun-elevation" type="range" min="8" max="70" step="1" value="12">
-        <output id="sun-elevation-value" for="sun-elevation">12°</output>
+        <input id="sun-elevation" type="range" min="8" max="70" step="1" value="38">
+        <output id="sun-elevation-value" for="sun-elevation">38°</output>
       </div>
-      <p>Sol baixo alonga a sombra · Sol alto encurta</p>
+      <div class="sun-actions">
+        <button id="sun-motion" type="button" aria-pressed="true">Pausar sol</button>
+        <button id="sun-front" type="button">Iluminar de frente</button>
+      </div>
+      <p>Arrastar pausa o sol · Animar retoma dessa posição<br>Sol baixo alonga a sombra · Sol alto encurta</p>
       <button id="sun-look" type="button">Olhar para o sol</button>
       <button id="sun-return" class="sun-return" type="button"><kbd>1</kbd> Voltar à cena</button>
     </section>

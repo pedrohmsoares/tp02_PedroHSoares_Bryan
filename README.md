@@ -10,6 +10,8 @@ O chão tem terra em tom ocre, rachaduras e placas levantadas. As paredes têm o
 
 O céu procedural tem nuvens em duas camadas, relevo de iluminação, um disco solar visível com halo e um horizonte levemente dourado. No painel, os controles de direção e altura movem o sol e a luz dos objetos juntos. A silhueta animada do Luffy é projetada no chão no sentido oposto ao sol: fica comprida com o sol baixo e curta com o sol alto. Uma sombra de contato suave complementa a projeção durante o quique. A projeção recebe o relevo do piso, mas não projeta sombras sobre as ruínas ou o próprio personagem. A câmera automática usa um ângulo mais baixo para mostrar o personagem e o céu juntos.
 
+O sol começa iluminando a frente do Luffy e percorre a cena automaticamente, variando a direção e a altura; a sombra acompanha o movimento. **Pausar sol** congela a posição. Arrastar qualquer controle também pausa, permitindo escolher a luz manualmente; **Animar sol** retoma dali, sem salto. **Iluminar de frente** reposiciona a luz à frente do personagem e pausa o percurso. **Olhar para o sol** enquadra o disco solar, e **Voltar à cena** retorna ao diorama.
+
 ### Como rodar
 
 O projeto usa WebGL2 e JavaScript, sem precisar instalar dependências. Na pasta do repositório, rode:

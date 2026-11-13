@@ -38,6 +38,7 @@ html, body {
 .sun-controls :focus-visible { outline: 2px solid #ffe3ac; outline-offset: 3px; }
 .sun-controls button { margin-top: 8px; padding: 5px 9px; border: 1px solid #eed29980; border-radius: 6px; background: #eed299; color: #18212a; font: inherit; cursor: pointer; }
 .sun-controls button:hover { background: #ffe3ac; }
+.sun-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .sun-controls .sun-return { margin-left: 6px; background: transparent; color: #d4dce2; font-size: 11px; }
 .music-controls { margin-top: 14px; padding-top: 12px; border-top: 1px solid #ffffff25; pointer-events: auto; }
 .music-heading { display: flex; align-items: center; gap: 10px; }

@@ -36,6 +36,7 @@ const state = {
     projectionMatrix: m4.identity(),
     whiteTexture: null,
     sun: { ...INITIAL_SUN },
+    sunControls: null,
     // luz do fim de tarde: vem de cima e um pouco de lado, tom quente
     light: {
         direction: sunDirection(INITIAL_SUN).map(value => -value),
@@ -122,7 +123,7 @@ async function initialize(gl) {
 
     setupCameraControls(gl.canvas)
     state.music = setupMusicControls()
-    setupSunControls(state.sun, () => {
+    state.sunControls = setupSunControls(state.sun, () => {
         state.light.direction = sunDirection(state.sun).map(value => -value)
         state.light.color = sunColor(state.sun)
     })
@@ -245,6 +246,7 @@ function frame(now) {
     const dt = Math.min((now - lastTime) / 1000, 0.1)
     lastTime = now
     state.time += dt
+    state.sunControls.update(dt)
     state.fog.amount += ((state.fog.enabled ? 1 : 0) - state.fog.amount) * (1 - Math.exp(-4 * dt))
 
     resize(gl)

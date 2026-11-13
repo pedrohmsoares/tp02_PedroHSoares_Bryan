@@ -1,5 +1,13 @@
 # Diário de Bordo — TP2 Paraíso (Computação Gráfica)
 
+## [2026-11-13] Percurso animado do sol e ajuste manual
+
+**Código alterado/adicionado/removido:** `utils/sun.js`, `main.js`, `index.html` e `style.css`.
+
+**Descrição:** O sol começa à frente do Luffy (+Z), ligeiramente de lado, e gira ao redor da cena a 3 graus por segundo, completando uma volta em dois minutos. Sua altura varia suavemente durante o percurso. A atualização usa o tempo de cada quadro e alimenta a direção e a cor da luz já compartilhadas pelo céu e pela sombra projetada. Os controles mostram a posição atual; ajustar um deles pausa a animação. O botão de animação permite pausar e retomar sem reiniciar o percurso. Um segundo botão posiciona a luz à frente do personagem para comparar a iluminação e a sombra com o sol parado.
+
+---
+
 ## [2026-11-13] Sol controlável e sombra da silhueta do Luffy
 
 **Código alterado/adicionado/removido:** `utils/sun.js`, `index.html`, `style.css`, `main.js`, `utils/shader.js`, `scene/skydome.js`, shaders do céu, de skinning e de Phong, e ajuste de enquadramento em `camera.js`.
